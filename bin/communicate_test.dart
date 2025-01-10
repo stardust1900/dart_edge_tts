@@ -50,9 +50,14 @@ test() async {
 }
 
 Future<void> main(List<String> args) async {
-  String txt = "今天天气不错！";
-  var communicate = Communicate(text: txt);
-  await communicate.save("test.mp3");
+  try {
+    String txt = "hello world";
+    var communicate = Communicate(text: txt);
+    await communicate.save("test.mp3");
+  } catch (e, stackTrace) {
+    print(e);
+    print(stackTrace);
+  }
 
   // test();
 }

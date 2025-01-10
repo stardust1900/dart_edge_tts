@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:xml/xml.dart';
@@ -19,8 +20,13 @@ import 'typing.dart';
 Map<String, dynamic> getHeadersAndData(Uint8List data, int headerLength) {
   final headers = <String, String>{};
   final headerBytes = data.sublist(0, headerLength);
-  final bodyBytes = data.sublist(headerLength + 2);
 
+  Uint8List bodyBytes = Uint8List(0);
+  // 调用方法时已经减掉2位，这里不要再加2了
+  if (data.length > headerLength) {
+    bodyBytes = data.sublist(headerLength);
+  }
+  // print("headerBytes:$headerBytes");
   final headerLines = utf8.decode(headerBytes).split("\r\n");
   for (final line in headerLines) {
     if (line.isNotEmpty) {
@@ -30,7 +36,7 @@ Map<String, dynamic> getHeadersAndData(Uint8List data, int headerLength) {
       }
     }
   }
-
+  // print("headers:$headers");
   return {'headers': headers, 'data': bodyBytes};
 }
 
@@ -60,11 +66,12 @@ Iterable<Uint8List> splitTextByByteLength(String text, int byteLength) sync* {
   // 将字符串转换为 UTF-8 编码的字节列表
   List<int> encodedText = utf8.encode(text);
 
-  while (encodedText.isNotEmpty) {
+  while (encodedText.length > byteLength) {
     int splitAt = byteLength;
-
+    print(encodedText);
     // 查找前 byteLength 个字节中的最后一个空格位置
     int lastSpace = encodedText.lastIndexOf(32, byteLength - 1);
+    // print("lastSpace:$lastSpace");
     if (lastSpace >= 0 && lastSpace < byteLength) {
       splitAt = lastSpace;
     }
@@ -170,7 +177,7 @@ String ssmlHeadersPlusData(String requestId, String timestamp, String ssml) {
 
 // 计算最大消息大小
 int calcMaxMessageSize(TTSConfig ttsConfig) {
-  final websocketMaxSize = 2 * 1024; // 2^16
+  final websocketMaxSize = pow(2, 16).toInt(); // 2^16
   final overheadPerMessage = ssmlHeadersPlusData(
         connectId(),
         dateToString(),
@@ -256,6 +263,7 @@ class Communicate {
       String text, TTSConfig ttsConfig) {
     final escapedText = escape(removeIncompatibleCharacters(text));
     final maxMessageSize = calcMaxMessageSize(ttsConfig);
+    print("maxMessageSize:$maxMessageSize escapedText:$escapedText");
     return splitTextByByteLength(escapedText, maxMessageSize);
   }
 
@@ -263,8 +271,11 @@ class Communicate {
     try {
       // 将 Uint8List 转换为字符串
       final jsonString = utf8.decode(data);
+      final jsonData = jsonDecode(jsonString);
+      print('jsonData:$jsonData');
+      //{Metadata: [{Type: WordBoundary, Data: {Offset: 625000, Duration: 4500000, text: {Text: 今天, Length: 2, BoundaryType: WordBoundary}}}]}
       // 解析 JSON 数据
-      final metadata = jsonDecode(jsonString) as List<dynamic>;
+      final metadata = jsonData['Metadata'];
 
       // 创建 Type 映射表
       final Map<String, TTSChunkType> typeMapping = {
@@ -295,7 +306,7 @@ class Communicate {
           final currentOffset =
               (data['Offset'] as int?)?.toInt() ?? 0 + state.offsetCompensation;
           final currentDuration = data['Duration'] as int? ?? 0;
-          final text = data['Text'] as String?;
+          final text = data['text']['Text'] as String?;
 
           if (text == null) {
             throw Exception("Invalid metadata format: Text is missing");
@@ -310,7 +321,9 @@ class Communicate {
         throw Exception("Unknown metadata type: $metaType");
       }
       throw Exception("No WordBoundary metadata found");
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('_parseMetadata异常：$e');
+      print('_parseMetadata堆栈跟踪：$stackTrace');
       throw Exception("Error parsing metadata: $e");
     }
   }
@@ -342,16 +355,22 @@ class Communicate {
         '"outputFormat":"audio-24khz-48kbitrate-mono-mp3"'
         "}}}}\r\n",
       );
-      for (final partialText in texts) {
-        webSocket.sink.add(
-          ssmlHeadersPlusData(
-            connectId(),
-            dateToString(),
-            mkssml(ttsConfig, utf8.decode(partialText)),
-          ),
-        );
-      }
+
+      print("partialText:${utf8.decode(state.partialText)}");
+      webSocket.sink.add(
+        ssmlHeadersPlusData(
+          connectId(),
+          dateToString(),
+          mkssml(ttsConfig, utf8.decode(state.partialText)),
+        ),
+      );
       await for (final message in webSocket.stream) {
+        if (webSocket.closeCode != null) {
+          print(
+              "WebSocket connection was closed with code: ${webSocket.closeCode}");
+          break;
+        }
+        // print("message:$message");
         if (message is String) {
           final encodedData = utf8.encode(message);
           final headerEndIndex = message.indexOf("\r\n\r\n");
@@ -376,15 +395,21 @@ class Communicate {
           if (message.length < 2) {
             throw Exception("Binary message is missing the header length.");
           }
-
+          // int headerLength1 = message
+          //     .sublist(0, 2)
+          //     .reduce((value, element) => (value << 8) | element);
+          // print("headerLength1:$headerLength1");
+          Uint8List headerLengthBytes = message.sublist(0, 2);
           final headerLength =
-              ByteData.view(message.buffer).getUint16(0, Endian.big);
+              ByteData.view(headerLengthBytes.buffer).getInt16(0, Endian.big);
+          // print("headerLength:$headerLength");
           if (headerLength > message.length) {
             throw Exception(
                 "Header length is greater than the length of the data.");
           }
-
-          final headersAndData = getHeadersAndData(message, headerLength);
+          //去掉前两位 防止报错
+          final headersAndData =
+              getHeadersAndData(message.sublist(2), headerLength);
           final headers = headersAndData["headers"];
           final data = headersAndData["data"];
 
@@ -395,14 +420,15 @@ class Communicate {
           }
 
           final contentType = headers["Content-Type"];
-          if (contentType != "audio/mpeg" && contentType != null) {
+          if (contentType == null) {
+            if (data.isNotEmpty) {
+              throw Exception(
+                  "Received binary message with no Content-Type, but with data.");
+            }
+            continue;
+          } else if (contentType != "audio/mpeg") {
             throw Exception(
                 "Received binary message with an unexpected Content-Type.");
-          }
-
-          if (contentType == null && data.isNotEmpty) {
-            throw Exception(
-                "Received binary message with no Content-Type, but with data.");
           }
 
           if (data.isEmpty) {
@@ -412,7 +438,7 @@ class Communicate {
 
           yield TTSChunk(
               type: TTSChunkType.audio,
-              data: data,
+              data: data as Uint8List,
               duration: 0,
               offset: 0,
               text: '');
@@ -420,7 +446,9 @@ class Communicate {
           throw Exception(message.error.toString());
         }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("_stream error: $e");
+      print("Stack Trace: $stackTrace");
       rethrow;
     } finally {
       await webSocket.sink.close();
@@ -433,11 +461,10 @@ class Communicate {
       throw StateError("stream can only be called once.");
     }
     state.streamWasCalled = true;
-
+    print(texts);
     // Stream the audio and metadata from the service.
     for (final partialText in texts) {
       state.partialText = partialText; // 更新 state 中的 partialText
-
       try {
         await for (final message in _stream()) {
           yield message;
@@ -472,18 +499,23 @@ class Communicate {
     }
 
     final audioFile = File(audioFname);
-    final audioSink = audioFile.openWrite(mode: FileMode.writeOnly);
+    final audioSink = audioFile.openWrite();
 
     try {
       await for (final message in stream()) {
         if (message.type == TTSChunkType.audio) {
-          audioSink.add(message.data as Uint8List);
+          if (message.data!.isNotEmpty) {
+            audioSink.add(message.data as Uint8List);
+          }
         } else if (metadataSink != null &&
             message.type == TTSChunkType.wordBoundary) {
           metadataSink.write(jsonEncode(message.data));
           metadataSink.write('\n');
         }
       }
+    } catch (e, stackTrace) {
+      print('捕获到异常：$e');
+      print('堆栈跟踪：$stackTrace');
     } finally {
       await audioSink.close();
       if (metadataSink != null) {
