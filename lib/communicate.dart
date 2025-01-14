@@ -3,14 +3,12 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
-import 'package:xml/xml.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:core';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
-import 'package:path/path.dart' as p;
 
 import 'constants.dart';
 import 'data_classes.dart';
@@ -68,7 +66,7 @@ Iterable<Uint8List> splitTextByByteLength(String text, int byteLength) sync* {
 
   while (encodedText.length > byteLength) {
     int splitAt = byteLength;
-    print(encodedText);
+    // print(encodedText);
     // 查找前 byteLength 个字节中的最后一个空格位置
     int lastSpace = encodedText.lastIndexOf(32, byteLength - 1);
     // print("lastSpace:$lastSpace");
@@ -333,8 +331,8 @@ class Communicate {
 
     // Create a new connection to the service.
     final sslContext = SecurityContext.defaultContext;
-    sslContext
-        .setTrustedCertificates("${Directory.current.path}/lib/cacert.pem");
+    // sslContext
+    //     .setTrustedCertificates("${Directory.current.path}/lib/cacert.pem");
 
     final webSocketUrl = Uri.parse(
       "$wssUrl&Sec-MS-GEC=${DRM.generateSecMsGec()}"

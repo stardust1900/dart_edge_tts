@@ -51,8 +51,9 @@ test() async {
 
 Future<void> main(List<String> args) async {
   try {
-    String txt = "hello world";
+    String txt = "锄禾日当午，汗滴禾下土。谁知盘中餐，粒粒皆辛苦。";
     var communicate = Communicate(text: txt);
+    // communicate.stream();
     await communicate.save("test.mp3");
   } catch (e, stackTrace) {
     print(e);

@@ -83,8 +83,8 @@ import 'package:dart_edge_tts/communicate.dart';
 // }
 
 void main() {
-  String text = "hello world";
-  int byteLength = 3;
+  String text = "hello world today is good";
+  int byteLength = 10;
 
   for (final segment in splitTextByByteLength(text, byteLength)) {
     print(utf8.decode(segment));
