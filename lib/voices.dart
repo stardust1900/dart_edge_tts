@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+// import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'constants.dart';
@@ -7,9 +7,9 @@ import 'drm.dart';
 import 'typing.dart';
 
 Future<List<Voice>?> listVoices() async {
-  final sslContext = SecurityContext.defaultContext;
-  sslContext.setTrustedCertificates(
-      "${Directory.current.path}/lib/cacert.pem"); // 替换为实际的证书路径
+  // final sslContext = SecurityContext.defaultContext;
+  // sslContext.setTrustedCertificates(
+  //     "${Directory.current.path}/lib/cacert.pem"); // 替换为实际的证书路径
 
   final client = http.Client();
 

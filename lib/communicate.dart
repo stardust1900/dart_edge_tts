@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:core';
@@ -327,8 +326,6 @@ class Communicate {
   }
 
   Stream<TTSChunk> _stream() async* {
-    bool audioWasReceived = false;
-
     // Create a new connection to the service.
     final sslContext = SecurityContext.defaultContext;
     // sslContext
@@ -470,12 +467,12 @@ class Communicate {
       } on http.ClientException catch (e) {
         // 检查是否有 response 属性（仅适用于 HTTP 请求）
         if (e is http.Response) {
-          if ((e as Response).statusCode != 403) {
+          if ((e as http.Response).statusCode != 403) {
             rethrow;
           }
 
           // Handle 403 error and retry the stream.
-          DRM.handleClientResponseError(e as Response);
+          DRM.handleClientResponseError(e as http.Response);
           await for (final message in _stream()) {
             yield message;
           }
