@@ -2,30 +2,6 @@ import 'dart:core';
 
 import 'typing.dart';
 
-// 定义 TTSChunk 类
-// class TTSChunk {
-//   final String type;
-//   final int offset;
-//   final int duration;
-//   final String text;
-
-//   TTSChunk({
-//     required this.type,
-//     required this.offset,
-//     required this.duration,
-//     required this.text,
-//   });
-
-//   factory TTSChunk.fromJson(Map<String, dynamic> json) {
-//     return TTSChunk(
-//       type: json['type'],
-//       offset: json['offset'],
-//       duration: json['duration'],
-//       text: json['text'],
-//     );
-//   }
-// }
-
 // 定义 Subtitle 类
 class Subtitle {
   final int index;
@@ -60,7 +36,7 @@ class SubMaker {
   List<Subtitle> cues = [];
 
   void feed(TTSChunk msg) {
-    if (msg.type != "WordBoundary") {
+    if (msg.type != TTSChunkType.wordBoundary) {
       throw ArgumentError("Invalid message type, expected 'WordBoundary'");
     }
 
@@ -107,7 +83,7 @@ class SubMaker {
   String get srt {
     final buffer = StringBuffer();
     for (var cue in cues) {
-      buffer.write('${cue.index}\n${cue}\n\n');
+      buffer.write('${cue.index}\n$cue\n\n');
     }
     return buffer.toString().trim();
   }
