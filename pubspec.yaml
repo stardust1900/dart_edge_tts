@@ -1,0 +1,30 @@
+name: edge_tts
+description: >-
+  Use Microsoft Edge's online text-to-speech service from Dart, without needing
+  Windows or the Edge browser. A faithful port of the Python `edge-tts` package.
+version: 7.2.8
+homepage: https://github.com/rany2/edge-tts
+repository: https://github.com/rany2/edge-tts
+issue_tracker: https://github.com/rany2/edge-tts/issues
+topics:
+  - tts
+  - text-to-speech
+  - microsoft-edge
+  - speech
+  - audio
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  web_socket_channel: ^3.0.0
+  http: ^1.2.0
+  args: ^2.5.0
+  crypto: ^3.0.3
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.25.0
+
+executables:
+  edge_tts: edge_tts
