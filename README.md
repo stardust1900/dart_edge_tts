@@ -25,7 +25,7 @@ dependencies:
       url: https://gitee.com/wangyidao/dart-edge-tts.git
       ref: master
 ```
-或者
+or
 
 ```yaml
 dependencies:
@@ -35,14 +35,6 @@ dependencies:
       ref: master
 ```
 
-Or run the CLI via `dart`:
-
-```bash
-dart pub global activate edge_tts
-edge_tts --list-voices
-```
-
-(From this repo you can also run it directly: `dart run edge_tts:edge_tts --help`.)
 
 ## Library usage
 
