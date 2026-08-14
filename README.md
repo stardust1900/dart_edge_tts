@@ -20,7 +20,19 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  edge_tts: ^7.2.8
+    edge_tts:
+    git:
+      url: https://gitee.com/wangyidao/dart-edge-tts.git
+      ref: master
+```
+或者
+
+```yaml
+dependencies:
+    edge_tts:
+    git:
+      url: https://github.com/stardust1900/dart_edge_tts.git
+      ref: master
 ```
 
 Or run the CLI via `dart`:
