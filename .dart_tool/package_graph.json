@@ -1,15 +1,17 @@
 {
   "roots": [
-    "edge_tts"
+    "dart_edge_tts"
   ],
   "packages": [
     {
-      "name": "edge_tts",
-      "version": "7.2.8",
+      "name": "dart_edge_tts",
+      "version": "7.3.1",
       "dependencies": [
         "args",
-        "crypto",
         "http",
+        "intl",
+        "meta",
+        "uuid",
         "web_socket_channel"
       ],
       "devDependencies": [
@@ -19,7 +21,7 @@
     },
     {
       "name": "test",
-      "version": "1.31.1",
+      "version": "1.29.0",
       "dependencies": [
         "analyzer",
         "async",
@@ -50,14 +52,29 @@
     },
     {
       "name": "lints",
-      "version": "4.0.0",
+      "version": "3.0.0",
       "dependencies": []
     },
     {
-      "name": "crypto",
+      "name": "meta",
+      "version": "1.18.0",
+      "dependencies": []
+    },
+    {
+      "name": "uuid",
       "version": "3.0.7",
       "dependencies": [
-        "typed_data"
+        "crypto"
+      ]
+    },
+    {
+      "name": "web_socket_channel",
+      "version": "2.4.5",
+      "dependencies": [
+        "async",
+        "crypto",
+        "stream_channel",
+        "web"
       ]
     },
     {
@@ -66,24 +83,20 @@
       "dependencies": []
     },
     {
-      "name": "http",
-      "version": "1.6.0",
+      "name": "intl",
+      "version": "0.17.0",
       "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
+        "clock",
+        "path"
       ]
     },
     {
-      "name": "web_socket_channel",
-      "version": "3.0.3",
+      "name": "http",
+      "version": "0.13.6",
       "dependencies": [
         "async",
-        "crypto",
-        "stream_channel",
-        "web",
-        "web_socket"
+        "http_parser",
+        "meta"
       ]
     },
     {
@@ -111,7 +124,7 @@
     },
     {
       "name": "test_core",
-      "version": "0.6.18",
+      "version": "0.6.15",
       "dependencies": [
         "analyzer",
         "args",
@@ -138,7 +151,7 @@
     },
     {
       "name": "test_api",
-      "version": "0.7.12",
+      "version": "0.7.9",
       "dependencies": [
         "async",
         "boolean_selector",
@@ -167,7 +180,7 @@
     },
     {
       "name": "source_span",
-      "version": "1.10.2",
+      "version": "1.10.1",
       "dependencies": [
         "collection",
         "path",
@@ -242,7 +255,7 @@
     },
     {
       "name": "matcher",
-      "version": "0.12.20",
+      "version": "0.12.18",
       "dependencies": [
         "async",
         "meta",
@@ -269,7 +282,7 @@
     },
     {
       "name": "coverage",
-      "version": "1.15.1",
+      "version": "1.15.0",
       "dependencies": [
         "args",
         "cli_config",
@@ -299,7 +312,7 @@
     },
     {
       "name": "async",
-      "version": "2.13.1",
+      "version": "2.13.0",
       "dependencies": [
         "collection",
         "meta"
@@ -307,7 +320,7 @@
     },
     {
       "name": "analyzer",
-      "version": "12.1.0",
+      "version": "10.0.1",
       "dependencies": [
         "_fe_analyzer_shared",
         "collection",
@@ -324,13 +337,20 @@
       ]
     },
     {
+      "name": "crypto",
+      "version": "3.0.7",
+      "dependencies": [
+        "typed_data"
+      ]
+    },
+    {
       "name": "web",
-      "version": "1.1.1",
+      "version": "0.5.1",
       "dependencies": []
     },
     {
-      "name": "meta",
-      "version": "1.19.0",
+      "name": "clock",
+      "version": "1.1.2",
       "dependencies": []
     },
     {
@@ -341,13 +361,6 @@
         "source_span",
         "string_scanner",
         "typed_data"
-      ]
-    },
-    {
-      "name": "web_socket",
-      "version": "1.0.1",
-      "dependencies": [
-        "web"
       ]
     },
     {
@@ -364,7 +377,7 @@
     },
     {
       "name": "vm_service",
-      "version": "15.2.0",
+      "version": "15.0.2",
       "dependencies": []
     },
     {
@@ -444,7 +457,7 @@
     },
     {
       "name": "_fe_analyzer_shared",
-      "version": "99.0.0",
+      "version": "93.0.0",
       "dependencies": [
         "meta",
         "source_span"
