@@ -1,6 +1,6 @@
 name: dart_edge_tts
 description: A sample command-line application.
-version: 1.0.0
+version: 7.3.1
 
 environment:
   sdk: ^3.4.4
@@ -10,15 +10,8 @@ dependencies:
   http: ^0.13.5
   intl: ^0.17.0
   args: ^2.4.0
-  json_annotation: ^4.7.0
-  build_runner: ^2.3.3
-  json_serializable: ^6.5.4
   web_socket_channel: ^2.4.0
   uuid: ^3.0.7
-  xml: ^6.2.2
-  crypto: ^3.0.2
-  web_socket_client: ^0.1.5
-  dio: ^5.7.0
   meta: ^1.16.0
 
 dev_dependencies:

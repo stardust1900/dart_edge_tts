@@ -3,7 +3,7 @@
 import 'dart:typed_data';
 
 // Define enums for literal values
-enum TTSChunkType { audio, wordBoundary }
+enum TTSChunkType { audio, wordBoundary, sentenceBoundary }
 
 enum ContentCategory {
   Cartoon,
@@ -63,10 +63,14 @@ class TTSChunk {
   });
 
   factory TTSChunk.fromMap(Map<String, dynamic> map) {
+    final typeStr = map['type'] as String;
+    final type = typeStr == 'audio'
+        ? TTSChunkType.audio
+        : (typeStr == 'SentenceBoundary'
+            ? TTSChunkType.sentenceBoundary
+            : TTSChunkType.wordBoundary);
     return TTSChunk(
-      type: map['type'] == 'audio'
-          ? TTSChunkType.audio
-          : TTSChunkType.wordBoundary,
+      type: type,
       data: map['data'] != null ? Uint8List.fromList(map['data']) : null,
       duration: map['duration'],
       offset: map['offset'],
@@ -76,7 +80,11 @@ class TTSChunk {
 
   Map<String, dynamic> toMap() {
     return {
-      'type': type == TTSChunkType.audio ? 'audio' : 'WordBoundary',
+      'type': type == TTSChunkType.audio
+          ? 'audio'
+          : (type == TTSChunkType.sentenceBoundary
+              ? 'SentenceBoundary'
+              : 'WordBoundary'),
       'data': data?.toList(),
       'duration': duration,
       'offset': offset,
@@ -94,13 +102,16 @@ class VoiceTag {
     required this.voicePersonalities,
   });
 
-  factory VoiceTag.fromMap(Map<String, dynamic> map) {
+  factory VoiceTag.fromMap(Map<String, dynamic>? map) {
+    final m = map ?? <String, dynamic>{};
+    final cats = (m['ContentCategories'] as List<dynamic>?) ?? <dynamic>[];
+    final pers = (m['VoicePersonalities'] as List<dynamic>?) ?? <dynamic>[];
     return VoiceTag(
-      contentCategories: (map['ContentCategories'] as List<dynamic>)
-          .map((e) => ContentCategory.values.byName(e.trim()))
+      contentCategories: cats
+          .map((e) => ContentCategory.values.byName((e as String).trim()))
           .toList(),
-      voicePersonalities: (map['VoicePersonalities'] as List<dynamic>)
-          .map((e) => VoicePersonality.values.byName(e.trim()))
+      voicePersonalities: pers
+          .map((e) => VoicePersonality.values.byName((e as String).trim()))
           .toList(),
     );
   }
@@ -227,12 +238,16 @@ class CommunicateState {
   int offsetCompensation;
   int lastDurationOffset;
   bool streamWasCalled;
+  int chunkAudioBytes; // bytes received in the current chunk
+  int cumulativeAudioBytes; // bytes received across all completed chunks
 
   CommunicateState({
     required this.partialText,
     required this.offsetCompensation,
     required this.lastDurationOffset,
     required this.streamWasCalled,
+    this.chunkAudioBytes = 0,
+    this.cumulativeAudioBytes = 0,
   });
 
   factory CommunicateState.fromMap(Map<String, dynamic> map) {
@@ -241,6 +256,8 @@ class CommunicateState {
       offsetCompensation: map['offset_compensation'],
       lastDurationOffset: map['last_duration_offset'],
       streamWasCalled: map['stream_was_called'],
+      chunkAudioBytes: map['chunk_audio_bytes'] ?? 0,
+      cumulativeAudioBytes: map['cumulative_audio_bytes'] ?? 0,
     );
   }
 
@@ -250,6 +267,8 @@ class CommunicateState {
       'offset_compensation': offsetCompensation,
       'last_duration_offset': lastDurationOffset,
       'stream_was_called': streamWasCalled,
+      'chunk_audio_bytes': chunkAudioBytes,
+      'cumulative_audio_bytes': cumulativeAudioBytes,
     };
   }
 }

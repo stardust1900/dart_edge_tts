@@ -1,43 +1,25 @@
-import 'dart:core';
+import 'package:dart_edge_tts/srt_composer.dart';
+import 'package:dart_edge_tts/typing.dart';
 
-import 'typing.dart';
-
-// 定义 Subtitle 类
-class Subtitle {
-  final int index;
-  final Duration start;
-  final Duration end;
-  final String content;
-
-  Subtitle({
-    required this.index,
-    required this.start,
-    required this.end,
-    required this.content,
-  });
-
-  @override
-  String toString() {
-    return '${_formatTime(start)} --> ${_formatTime(end)}\n$content\n';
-  }
-
-  // 辅助方法用于格式化时间
-  static String _formatTime(Duration time) {
-    final hours = time.inHours.toString().padLeft(2, '0');
-    final minutes = (time.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (time.inSeconds % 60).toString().padLeft(2, '0');
-    final milliseconds =
-        (time.inMilliseconds % 1000).toString().padLeft(3, '0');
-    return '$hours:$minutes:$seconds,$milliseconds';
-  }
-}
-
+/// SubMaker is used to generate subtitles from WordBoundary and
+/// SentenceBoundary messages.
 class SubMaker {
   List<Subtitle> cues = [];
+  TTSChunkType? type;
 
+  /// Feed a WordBoundary or SentenceBoundary message to the SubMaker object.
   void feed(TTSChunk msg) {
-    if (msg.type != TTSChunkType.wordBoundary) {
-      throw ArgumentError("Invalid message type, expected 'WordBoundary'");
+    if (msg.type != TTSChunkType.wordBoundary &&
+        msg.type != TTSChunkType.sentenceBoundary) {
+      throw ArgumentError(
+          "Invalid message type, expected 'WordBoundary' or 'SentenceBoundary'");
+    }
+
+    if (type == null) {
+      type = msg.type;
+    } else if (type != msg.type) {
+      throw ArgumentError(
+          "Expected message type '$type', but got '${msg.type}'");
     }
 
     cues.add(
@@ -50,6 +32,7 @@ class SubMaker {
     );
   }
 
+  /// Merge cues so each resulting cue contains at least [words] words.
   void mergeCues(int words) {
     if (words <= 0) {
       throw ArgumentError("Invalid number of words to merge, expected > 0");
@@ -80,16 +63,9 @@ class SubMaker {
     cues = newCues;
   }
 
-  String get srt {
-    final buffer = StringBuffer();
-    for (var cue in cues) {
-      buffer.write('${cue.index}\n$cue\n\n');
-    }
-    return buffer.toString().trim();
-  }
+  /// Get the SRT formatted subtitles from the SubMaker object.
+  String get srt => compose(cues);
 
   @override
-  String toString() {
-    return srt;
-  }
+  String toString() => srt;
 }

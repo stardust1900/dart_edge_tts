@@ -14,20 +14,22 @@ Future<List<Voice>?> listVoices() async {
   final client = http.Client();
 
   try {
-    final url = Uri.parse(
+    var url = Uri.parse(
         "$voiceListUrl&Sec-MS-GEC=${DRM.generateSecMsGec()}&Sec-MS-GEC-Version=$secMsGecVersion");
 
     var response = await client.get(
       url,
-      headers: voiceHeaders,
+      headers: DRM.headersWithMuid(voiceHeaders),
       // 如果有代理，可以在这里设置
     );
 
     if (response.statusCode == 403) {
       DRM.handleClientResponseError(response);
-      // 重新尝试请求
-      final retryResponse = await client.get(url, headers: voiceHeaders);
-      response = retryResponse;
+      // 重试时使用全新生成的 token（对应 Python __list_voices 每次重新生成）
+      url = Uri.parse(
+          "$voiceListUrl&Sec-MS-GEC=${DRM.generateSecMsGec()}&Sec-MS-GEC-Version=$secMsGecVersion");
+      response = await client.get(
+          url, headers: DRM.headersWithMuid(voiceHeaders));
     }
 
     if (response.statusCode != 200) {
@@ -41,7 +43,7 @@ Future<List<Voice>?> listVoices() async {
 }
 
 class VoicesManager {
-  List<Voice> _voices = [];
+  List<VoicesManagerVoice> _voices = [];
   bool _calledCreate = false;
 
   // 私有构造函数
@@ -50,17 +52,30 @@ class VoicesManager {
   // 静态异步方法来创建并初始化 VoicesManager
   static Future<VoicesManager> create({List<Voice>? customVoices}) async {
     final manager = VoicesManager._();
-    manager._voices = (customVoices ?? await listVoices())!;
+    final base = customVoices ?? await listVoices() ?? <Voice>[];
+    // 为每个语音补 Language 字段（对应 Python 的 Language = Locale.split("-")[0]）
+    manager._voices = base.map((voice) {
+      return VoicesManagerVoice(
+        name: voice.name,
+        shortName: voice.shortName,
+        gender: voice.gender,
+        locale: voice.locale,
+        suggestedCodec: voice.suggestedCodec,
+        friendlyName: voice.friendlyName,
+        status: voice.status,
+        voiceTag: voice.voiceTag,
+        language: voice.locale.split("-")[0],
+      );
+    }).toList();
     manager._calledCreate = true;
     return manager;
   }
 
-  // 查找匹配的语音
-  List<Voice> find({
+  // 查找匹配的语音，对齐 Python 的 kwargs.items() <= voice.items() 子集匹配
+  List<VoicesManagerVoice> find({
+    String? locale,
     String? language,
-    String? name,
-    List<String>? contentCategories,
-    List<String>? voicePersonalities,
+    String? gender,
   }) {
     if (!_calledCreate) {
       throw StateError(
@@ -68,22 +83,18 @@ class VoicesManager {
     }
 
     return _voices.where((voice) {
-      bool matchesLanguage =
-          language == null || voice.locale.startsWith(language);
-      bool matchesName = name == null || voice.name == name;
-      bool matchesCategories = contentCategories == null ||
-          contentCategories.every((category) =>
-              voice.voiceTag.contentCategories.contains(category));
-      bool matchesPersonalities = voicePersonalities == null ||
-          voicePersonalities.every((personality) =>
-              voice.voiceTag.voicePersonalities.contains(personality));
-
-      return matchesLanguage &&
-          matchesName &&
-          matchesCategories &&
-          matchesPersonalities;
+      if (gender != null && voice.gender != gender) {
+        return false;
+      }
+      if (locale != null && voice.locale != locale) {
+        return false;
+      }
+      if (language != null && voice.language != language) {
+        return false;
+      }
+      return true;
     }).toList();
   }
 
-  List<Voice> get voices => _voices;
+  List<VoicesManagerVoice> get voices => _voices;
 }

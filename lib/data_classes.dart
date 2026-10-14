@@ -10,6 +10,7 @@ class TTSConfig {
   final String rate;
   final String volume;
   final String pitch;
+  final String boundary;
 
   // 静态方法用于验证字符串参数
   static String validateStringParam(
@@ -26,11 +27,16 @@ class TTSConfig {
     required this.rate,
     required this.volume,
     required this.pitch,
+    this.boundary = 'SentenceBoundary',
   }) : voice = _formatVoice(inputVoice) {
     // 验证 rate, volume, pitch 参数
     validateStringParam('rate', rate, r"^[+-]\d+%$");
     validateStringParam('volume', volume, r"^[+-]\d+%$");
     validateStringParam('pitch', pitch, r"^[+-]\d+Hz$");
+    // 验证 boundary 参数
+    if (boundary != 'WordBoundary' && boundary != 'SentenceBoundary') {
+      throw FormatException('Invalid boundary: $boundary');
+    }
   }
 
   // 辅助方法用于格式化 voice
@@ -55,18 +61,22 @@ class TTSConfig {
   }
 
 // 验证 TTS 设置（可以根据需要添加更多验证逻辑）
-  factory TTSConfig.validate(
-      String voice, String rate, String volume, String pitch) {
+  factory TTSConfig.validate(String voice, String rate, String volume,
+      String pitch, String boundary) {
     if (voice.isEmpty) {
       throw ArgumentError("voice cannot be empty");
     }
     return TTSConfig(
-        inputVoice: voice, rate: rate, volume: volume, pitch: pitch);
+        inputVoice: voice,
+        rate: rate,
+        volume: volume,
+        pitch: pitch,
+        boundary: boundary);
   }
 
   @override
   String toString() {
-    return 'TTSConfig{voice: $voice, rate: $rate, volume: $volume, pitch: $pitch}';
+    return 'TTSConfig{voice: $voice, rate: $rate, volume: $volume, pitch: $pitch, boundary: $boundary}';
   }
 }
 

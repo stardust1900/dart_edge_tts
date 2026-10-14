@@ -1,3 +1,9 @@
-int calculate() {
-  return 6 * 7;
-}
+export 'package:dart_edge_tts/communicate.dart';
+export 'package:dart_edge_tts/voices.dart';
+export 'package:dart_edge_tts/submaker.dart';
+export 'package:dart_edge_tts/srt_composer.dart';
+export 'package:dart_edge_tts/progress.dart';
+export 'package:dart_edge_tts/version.dart';
+export 'package:dart_edge_tts/typing.dart';
+export 'package:dart_edge_tts/exceptions.dart';
+export 'package:dart_edge_tts/data_classes.dart';
