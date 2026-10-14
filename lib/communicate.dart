@@ -181,7 +181,7 @@ class Communicate {
   final String? proxy;
   final Duration connectTimeout;
   final Duration receiveTimeout;
-  final http.BaseClient? connector;
+  final http.Client? connector;
   late final CommunicateState state;
 
   static String escape(String text) {
@@ -219,9 +219,6 @@ class Communicate {
     }
     if (receiveTimeout <= Duration.zero) {
       throw ArgumentError("receive_timeout must be a positive integer");
-    }
-    if (connector != null && connector.runtimeType != http.BaseClient) {
-      throw ArgumentError("connector must be an instance of http.BaseClient");
     }
 
     final texts_ =

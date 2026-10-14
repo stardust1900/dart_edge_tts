@@ -526,10 +526,15 @@ class DRM {
 
   /// Handle a client response error, adjusting clock skew based on server date.
   static void handleClientResponseError(http.Response response) {
-    if (!response.headers.containsKey('date')) {
-      throw SkewAdjustmentError("No server date in headers.");
+    // HTTP header names are case-insensitive; http 1.x reports them as a plain
+    // (case-sensitive) Map, so look up "date" without assuming casing.
+    String? serverDate;
+    for (final entry in response.headers.entries) {
+      if (entry.key.toLowerCase() == 'date') {
+        serverDate = entry.value;
+        break;
+      }
     }
-    final serverDate = response.headers['date'];
     if (serverDate == null) {
       throw SkewAdjustmentError("No server date in headers.");
     }
